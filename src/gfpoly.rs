@@ -4,21 +4,10 @@ const generatorPolynomial: u128 = /*(1 << (128 - 128 - 1)) + */ (1 << (128 - 7 -
 use std::ops;
 use std::fmt;
 
+#[derive(Copy, Clone)]
 pub struct GFPoly {
     poly: u128
 }
-
-// impl GFPoly {
-//     fn new(bytes: &[u8]) -> Self {
-//         let boost = GFPoly::from(1);
-//         const eight: GFPoly = GFPoly::from(8);
-//         let res = GFPoly::from(0);
-// 
-//         for byte in bytes {
-//             res += byte * boost;
-//         }
-//     }
-// }
 
 impl fmt::Debug for GFPoly {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -79,11 +68,12 @@ impl ops::Mul<GFPoly> for GFPoly {
     }
 }
 
-// impl ops::MulAssign<GFPoly> for GFPoly {
-//     fn mul_assign(&mut self, rhs: GFPoly) {
-//         self = &mut(*self * rhs);
-//     }
-// }
+impl ops::MulAssign<GFPoly> for GFPoly {
+    fn mul_assign(&mut self, rhs: GFPoly) {
+        let temp = *self * rhs;
+        self.poly = temp.poly;
+    }
+}
 
 fn rightshift(poly: u128) -> u128 {
     let add = if poly & 1 == 1 {
