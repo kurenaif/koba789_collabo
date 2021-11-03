@@ -54,10 +54,10 @@ fn block_encrypt(K: &[u8; 32], msg: &u128) -> u128 {
     let key = GenericArray::from_slice(K);
     let mut block = *Block::from_slice(&msg.to_be_bytes());
 
-    let cipher = Aes256::new(&key);
+    let cipher = Aes256::new(key);
 
     cipher.encrypt_block(&mut block);
-    let a = block.clone();
+    let a = block;
     let temp: [u8; 16] = a.as_slice().try_into().unwrap();
     u128::from_be_bytes(temp)
 }
@@ -92,7 +92,7 @@ fn encrypt<'a>(P: &[u8], K: &[u8; 32], IV: &[u8], A: &[u8]) -> (Vec<u8>, [u8; 16
         let temp: [u8; 16] = temp.try_into().unwrap();
         Y[0] = u128::from_be_bytes(temp);
     } else {
-        Y[0] = ghash(H, b"", &IV);
+        Y[0] = ghash(H, b"", IV);
     }
 
     for i in 1..(n+1) {
@@ -102,12 +102,12 @@ fn encrypt<'a>(P: &[u8], K: &[u8; 32], IV: &[u8], A: &[u8]) -> (Vec<u8>, [u8; 16
     let mut C = Vec::new();
     for i in 0..(n-1) {
         C.push(
-            bytes_xor(P[i], &block_encrypt(&K, &Y[i+1]).to_be_bytes()).unwrap()
+            bytes_xor(P[i], &block_encrypt(K, &Y[i+1]).to_be_bytes()).unwrap()
         );
     }
     let u = P[n-1].len();
     C.push(
-        bytes_xor(P[n-1], &block_encrypt(&K, &Y[n]).to_be_bytes()[..u]).unwrap()
+        bytes_xor(P[n-1], &block_encrypt(K, &Y[n]).to_be_bytes()[..u]).unwrap()
     );
     let C = C.concat();
 

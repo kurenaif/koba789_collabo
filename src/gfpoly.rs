@@ -15,7 +15,7 @@ impl fmt::Debug for GFPoly {
 
         for i in 0..128 {
             if (self.poly >> i) & 1 == 1 {
-                if res != "" {
+                if !res.is_empty() {
                     res += " + "
                 }
                 res += &format!("x^{}", 127 - i)
