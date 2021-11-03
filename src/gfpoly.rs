@@ -89,3 +89,28 @@ fn rightshift(poly: u128) -> u128 {
     };
     (poly >> 1) ^ add
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{gfpoly};
+
+    #[test]
+    fn x128_test() {
+        let lhs = gfpoly::GFPoly::from(1);
+        let rhs = gfpoly::GFPoly::from(1u128 << 126);
+
+        let actual:u128 = (lhs * rhs).into();
+        let expect:u128 = 0xe1000000000000000000000000000000u128;
+        assert_eq!(actual, expect);
+    }
+
+    #[test]
+    fn random_test() {
+        let lhs = gfpoly::GFPoly::from(1242141243);
+        let rhs = gfpoly::GFPoly::from(123);
+
+        let actual:u128 = (lhs * rhs).into();
+        let expect:u128 = 0xfa2800000000000000000028b7d0d77bu128;
+        assert_eq!(actual, expect);
+    }
+}
