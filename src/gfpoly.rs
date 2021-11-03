@@ -34,6 +34,12 @@ impl From<u128> for GFPoly {
     }
 }
 
+impl From<GFPoly> for u128 {
+    fn from(from: GFPoly) -> u128 {
+        from.poly
+    }
+}
+
 impl ops::Add<GFPoly> for GFPoly {
     type Output = GFPoly;
 
