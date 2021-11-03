@@ -22,6 +22,7 @@ fn padding_slice(bytes: &mut Vec<u8>) -> Vec<u128> {
 }
 
 fn ghash(h: u128, a: &[u8], c:&[u8]) -> u128{
+    println!("{}",h);
     let len_a: u128 = u128::try_from(a.len()).unwrap() * 8u128; // unit: bits
     let len_c: u128 = u128::try_from(c.len()).unwrap() * 8u128; // unit: bits
 
@@ -38,15 +39,15 @@ fn ghash(h: u128, a: &[u8], c:&[u8]) -> u128{
     let mut x = vec![gfpoly::GFPoly::from(0u128); m+n+2];
 
     for i in 1..(m+1) {
-        x[i] = x[i-1] + a[i-1] * h;
+        x[i] = (x[i-1] + a[i-1]) * h;
     }
 
     for i in 1..(n+1) {
         x[m+i] = (x[m+i-1] + c[i-1]) * h;
     }
 
-    let res: u128 = ((len_a << 64) + len_c).try_into().unwrap();
-    gfpoly::GFPoly::from(res).into()
+    let poly: u128 = ((len_a << 64) + len_c).try_into().unwrap();
+    ((x[m+n] + gfpoly::GFPoly::from(poly).into()) * h).into()
 }
 
 fn block_encrypt(k: &[u8; 32], msg: &u128) -> u128 {
@@ -63,7 +64,7 @@ fn block_encrypt(k: &[u8; 32], msg: &u128) -> u128 {
 
 fn incr(y: u128) -> u128 {
     // split Y[12], Y[4]
-    let f = y & (0xffffffffffffffffffffffffffffffffu128 - 0xffffffffffffffffffffffff00000000u128);
+    let f = y & (0xffffffffffffffffffffffffffffffffu128 - 0xffffffffu128);
     let mut i = y & 0xffffffffu128; 
     i = (i + 1) & 0xffffffffu128;
     f + i
@@ -98,6 +99,10 @@ fn encrypt<'a>(p: &[u8], k: &[u8; 32], iv: &[u8], a: &[u8]) -> (Vec<u8>, [u8; 16
         y[i] = incr(y[i-1]);
     }
 
+    for yy in &y {
+        println!("{}", yy);
+    }
+
     let mut c = Vec::new();
     for i in 0..(n-1) {
         c.push(
@@ -118,13 +123,27 @@ fn encrypt<'a>(p: &[u8], k: &[u8; 32], iv: &[u8], a: &[u8]) -> (Vec<u8>, [u8; 16
 }
 
 fn main() {
-    // 0xfeffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308
-    let k = b"\xfe\xff\xe9\x92\x86es\x1cmj\x8f\x94g0\x83\x08\xfe\xff\xe9\x92\x86es\x1cmj\x8f\x94g0\x83\x08";
-    // 0xfeedfacedeadbeeffeedfacedeadbeefabaddad2
-    let a = b"\xfe\xed\xfa\xce\xde\xad\xbe\xef\xfe\xed\xfa\xce\xde\xad\xbe\xef\xab\xad\xda\xd2";
-    // 0xd9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39
-    let p = b"\xd912%\xf8\x84\x06\xe5\xa5Y\t\xc5\xaf\xf5&\x9a\x86\xa7\xa9S\x154\xf7\xda.L0=\x8a1\x8ar\x1c<\x0c\x95\x95h\tS/\xcf\x0e$I\xa6\xb5%\xb1j\xed\xf5\xaa\r\xe6W\xbac{9";
-    // 0x9313225df88406e555909c5aff5269aa6a7a9538534f7da1e4c303d2a318a728c3c0c95156809539fcf0e2429a6b525416aedbf5a0de6a57a637b39b
-    let iv = b"\x93\x13\x22]\xf8\x84\x06\xe5U\x90\x9cZ\xffRi\xaajz\x958SO}\xa1\xe4\xc3\x03\xd2\xa3\x18\xa7(\xc3\xc0\xc9QV\x80\x959\xfc\xf0\xe2B\x9akRT\x16\xae\xdb\xf5\xa0\xdejW\xa67\xb3\x9b";
-    encrypt(p, k, iv, a);
+   // 0xfeffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308
+   let k = b"\xfe\xff\xe9\x92\x86es\x1cmj\x8f\x94g0\x83\x08\xfe\xff\xe9\x92\x86es\x1cmj\x8f\x94g0\x83\x08";
+   // 0xfeedfacedeadbeeffeedfacedeadbeefabaddad2
+   let a = b"\xfe\xed\xfa\xce\xde\xad\xbe\xef\xfe\xed\xfa\xce\xde\xad\xbe\xef\xab\xad\xda\xd2";
+   // 0xd9313225f88406e5a55909c5aff5269a86a7a9531534f7da2e4c303d8a318a721c3c0c95956809532fcf0e2449a6b525b16aedf5aa0de657ba637b39
+   let p = b"\xd912%\xf8\x84\x06\xe5\xa5Y\t\xc5\xaf\xf5&\x9a\x86\xa7\xa9S\x154\xf7\xda.L0=\x8a1\x8ar\x1c<\x0c\x95\x95h\tS/\xcf\x0e$I\xa6\xb5%\xb1j\xed\xf5\xaa\r\xe6W\xbac{9";
+   // 0x9313225df88406e555909c5aff5269aa6a7a9538534f7da1e4c303d2a318a728c3c0c95156809539fcf0e2429a6b525416aedbf5a0de6a57a637b39b
+   let iv = b"\x93\x13\x22]\xf8\x84\x06\xe5U\x90\x9cZ\xffRi\xaajz\x958SO}\xa1\xe4\xc3\x03\xd2\xa3\x18\xa7(\xc3\xc0\xc9QV\x80\x959\xfc\xf0\xe2B\x9akRT\x16\xae\xdb\xf5\xa0\xdejW\xa67\xb3\x9b";
+   println!("{:?}", encrypt(p, k, iv, a));
+
+
+    // let a = gfpoly::GFPoly::from((1u128<<126) + (1u128<<127));
+    // let b = gfpoly::GFPoly::from((1u128<<126) + (1u128<<127));
+    // println!("{:?}", a * b);
+
+    // let a = gfpoly::GFPoly::from((1u128<<12) + (1u128<<127));
+    // let b = gfpoly::GFPoly::from((1u128<<12) + (1u128<<126));
+    // println!("{:?}", a * b);
+
+    // let a = b"\xfe\xed\xfa\xce\xde\xad\xbe\xef\xfe\xed\xfa\xce\xde\xad\xbe\xef\xab\xad\xda\xd2";
+    // let h = b"\xb8;S7\x08\xbfS]\n\xa6\xe5)\x80\xd5;x";
+    // let c = b"B\x83\x1e\xc2!wt$Kr!\xb7\x84\xd0\xd4\x9c\xe3\xaa!/,\x02\xa4\xe05\xc1~#)\xac\xa1.!\xd5\x14\xb2Tf\x93\x1c}\x8fjZ\xac\x84\xaa\x05\x1b\xa3\x0b9j\n\xac\x97=X\xe0\x91";
+    // println!("{:x}", ghash(u128::from_be_bytes(*h),a,c));
 }

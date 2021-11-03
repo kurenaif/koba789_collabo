@@ -63,7 +63,7 @@ impl ops::Mul<GFPoly> for GFPoly {
 
         for i in (0..128).rev() {
             if (self.poly >> i) & 1 == 1 { 
-                res += rhspoly;
+                res ^= rhspoly;
             }
             rhspoly = rightshift(rhspoly);
         }
@@ -83,9 +83,9 @@ impl ops::MulAssign<GFPoly> for GFPoly {
 
 fn rightshift(poly: u128) -> u128 {
     let add = if poly & 1 == 1 {
-        0x91800000000000000000000000000000
+        0xe1000000000000000000000000000000u128
     } else {
-        0
+        0u128
     };
-    (poly >> 1) + add
+    (poly >> 1) ^ add
 }
