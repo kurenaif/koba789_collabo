@@ -44,13 +44,13 @@ impl ops::Add<GFPoly> for GFPoly {
     type Output = GFPoly;
 
     fn add(self, rhs: GFPoly) -> GFPoly {
-        GFPoly{ poly: self.poly ^ rhs.poly }
+        GFPoly{poly: 1} // TODO
     }
 }
 
 impl ops::AddAssign<GFPoly> for GFPoly {
     fn add_assign(&mut self, rhs: GFPoly) {
-        self.poly ^= rhs.poly
+        self.poly = 1 // TODO
     }
 }
 
@@ -58,19 +58,7 @@ impl ops::Mul<GFPoly> for GFPoly {
     type Output = GFPoly;
 
     fn mul(self, rhs: GFPoly) -> GFPoly {
-        let mut rhspoly = rhs.poly;
-        let mut res = 0u128;
-
-        for i in (0..128).rev() {
-            if (self.poly >> i) & 1 == 1 { 
-                res ^= rhspoly;
-            }
-            rhspoly = rightshift(rhspoly);
-        }
- 
-        GFPoly{
-            poly: res
-        }
+        GFPoly{poly: 1} // TODO
     }
 }
 
@@ -82,12 +70,7 @@ impl ops::MulAssign<GFPoly> for GFPoly {
 }
 
 fn rightshift(poly: u128) -> u128 {
-    let add = if poly & 1 == 1 {
-        0xe1000000000000000000000000000000u128
-    } else {
-        0u128
-    };
-    (poly >> 1) ^ add
+    1 // TODO
 }
 
 #[cfg(test)]
